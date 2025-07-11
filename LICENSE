@@ -1,0 +1,61 @@
+MIT License
+
+Copyright (c) 2024 Oodaa Messenger
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+ADDITIONAL PRIVACY NOTICE:
+
+This software is designed to protect user privacy and security. The developers
+of this software:
+
+1. Do not collect any personal data or usage analytics
+2. Do not store messages or user data on any servers
+3. Implement end-to-end encryption for all communications
+4. Provide this software as a tool for private communication
+
+Users are responsible for:
+- Securing their own devices and private keys
+- Understanding the privacy implications of their usage
+- Complying with local laws and regulations
+- Conducting security audits if using in production environments
+
+CRYPTOGRAPHIC NOTICE:
+
+This software contains cryptographic functionality. The distribution and use
+of this software may be subject to export controls in some jurisdictions.
+Users are responsible for compliance with applicable laws and regulations.
+
+The cryptographic implementations in this software are based on well-established
+protocols and standards, but no cryptographic system is perfect. Users should
+consider having the implementation audited by qualified security professionals
+before using in high-security environments.
+
+DISCLAIMER:
+
+While this software implements industry-standard cryptographic protocols and
+privacy practices, the developers make no guarantees about the absolute
+security or privacy of communications. Users assume all risks associated
+with the use of this software.
+
+This software is provided for educational, research, and personal use. Users
+are encouraged to understand the technology and its limitations before relying
+on it for sensitive communications.

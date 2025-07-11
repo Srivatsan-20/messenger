@@ -1,0 +1,208 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# iOS related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+
+# Node.js related (for signaling server)
+signaling_server/node_modules/
+signaling_server/.env
+signaling_server/npm-debug.log*
+signaling_server/yarn-debug.log*
+signaling_server/yarn-error.log*
+signaling_server/lerna-debug.log*
+signaling_server/.pnpm-debug.log*
+
+# Runtime data
+signaling_server/pids
+signaling_server/*.pid
+signaling_server/*.seed
+signaling_server/*.pid.lock
+
+# Coverage directory used by tools like istanbul
+signaling_server/coverage/
+signaling_server/*.lcov
+
+# nyc test coverage
+signaling_server/.nyc_output
+
+# Dependency directories
+signaling_server/jspm_packages/
+
+# Optional npm cache directory
+signaling_server/.npm
+
+# Optional eslint cache
+signaling_server/.eslintcache
+
+# Microbundle cache
+signaling_server/.rpt2_cache/
+signaling_server/.rts2_cache_cjs/
+signaling_server/.rts2_cache_es/
+signaling_server/.rts2_cache_umd/
+
+# Optional REPL history
+signaling_server/.node_repl_history
+
+# Output of 'npm pack'
+signaling_server/*.tgz
+
+# Yarn Integrity file
+signaling_server/.yarn-integrity
+
+# dotenv environment variables file
+signaling_server/.env.test
+signaling_server/.env.production
+
+# Stores VSCode versions used for testing VSCode extensions
+signaling_server/.vscode-test
+
+# Security and sensitive files
+*.key
+*.pem
+*.p12
+*.keystore
+config.dart
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# IDE files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Build outputs
+dist/
+out/
+build/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Test coverage
+coverage/
+test/coverage/
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local configuration (should be copied from template)
+lib/config.dart
+
+# Deployment files with secrets
+docker-compose.override.yml
+kubernetes-secrets.yml
