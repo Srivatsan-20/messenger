@@ -1,297 +1,224 @@
-# Oodaa Messenger
+# 🚀 Oodaa Messenger - P2P Real-Time Messaging App
 
-A fully private, peer-to-peer messaging app built with Flutter. Zero cloud storage, zero server-based message routing, and no user-identifiable data collection.
+A complete peer-to-peer messaging application built with Flutter and Node.js, featuring real-time communication, persistent storage, and cross-device compatibility.
 
-## 🔐 Key Features
+## ✨ Current Implementation Features
 
-- **100% Private**: No phone numbers, emails, or personal data required
-- **Peer-to-Peer**: Direct messaging using WebRTC with no message servers
-- **End-to-End Encryption**: Signal-level security with Double Ratchet protocol
-- **Offline Support**: Bluetooth/Wi-Fi Direct for nearby messaging
-- **No Data Collection**: Everything stored locally on your device
-- **QR Code Contacts**: Share contacts via QR codes or invite links
-- **Disappearing Messages**: Optional message expiration
-- **File Sharing**: Encrypted media transfer over P2P connections
+### 🔥 Core Features (Working)
+- **Real-time P2P messaging** - Direct communication between devices via WebSocket
+- **Persistent identity** - No re-registration needed across sessions
+- **Bidirectional contacts** - Both users get added automatically
+- **QR code sharing** - Easy contact discovery and addition
+- **Cross-device support** - Works on web browsers and mobile
+- **Auto-reconnection** - Handles server restarts gracefully
+- **Data persistence** - Browser localStorage for contacts and messages
 
-## 🏗️ Architecture
+### 🚧 Planned Features
+- **End-to-End Encryption** - Signal-level security with Double Ratchet protocol
+- **Offline Support** - Bluetooth/Wi-Fi Direct for nearby messaging
+- **File Sharing** - Encrypted media transfer over P2P connections
+- **Disappearing Messages** - Optional message expiration
+
+## 🏗️ Current Architecture
+
+```
+┌─────────────────┐    WebSocket    ┌─────────────────┐
+│   Flutter App   │ ◄──────────────► │ Signaling Server│
+│   (Client A)    │                  │   (Node.js)     │
+└─────────────────┘                  └─────────────────┘
+                                              ▲
+                                              │ WebSocket
+                                              ▼
+                                     ┌─────────────────┐
+                                     │   Flutter App   │
+                                     │   (Client B)    │
+                                     └─────────────────┘
+```
 
 ### Tech Stack
-- **Frontend**: Flutter (Dart)
-- **P2P Communication**: flutter_webrtc
-- **Local Storage**: Hive + flutter_secure_storage
-- **Encryption**: AES-256-GCM, Curve25519, X3DH, Double Ratchet
-- **QR Codes**: qr_flutter, qr_code_scanner
-- **Offline**: Nearby Connections API (Android), Multipeer Connectivity (iOS)
-- **Signaling**: Node.js + Socket.IO (temporary, no data storage)
+- **Frontend**: Flutter (Dart) - Cross-platform UI
+- **Backend**: Node.js WebSocket server - Message routing and signaling
+- **Communication**: WebSocket - Real-time bidirectional communication
+- **Storage**: Browser localStorage - Client-side data persistence
 
-### Security
-- **Identity Keys**: Curve25519 key pairs stored in Android Keystore/iOS Secure Enclave
-- **Message Encryption**: AES-256-GCM with forward secrecy via Double Ratchet
-- **Key Exchange**: X3DH protocol for initial contact establishment
-- **No Metadata**: No user tracking, analytics, or cloud backups
+### 📁 Project Structure
+```
+messenger/
+├── lib/                          # Flutter application
+│   ├── main.dart                 # Main app entry point
+│   ├── networking/               # WebRTC and networking
+│   │   └── webrtc_manager.dart   # WebSocket connection management
+│   ├── ui/                       # User interface components
+│   └── storage/                  # Data persistence
+├── signaling-server/             # Node.js signaling server
+│   ├── server.js                 # WebSocket server
+│   ├── package.json              # Node.js dependencies
+│   └── node_modules/             # Server dependencies
+├── android/                      # Android configuration
+├── web/                          # Web deployment files
+└── deploy-guide.md               # Deployment instructions
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Flutter SDK (>=3.10.0)
-- Dart SDK (>=3.0.0)
-- Android Studio / Xcode for mobile development
-- Node.js (>=16.0.0) for signaling server
+- **Flutter SDK** (3.0+)
+- **Node.js** (16+)
+- **Git**
+- **Chrome/Edge** (for web testing)
 
-### 1. Clone and Setup Flutter App
-
+### 1️⃣ Clone Repository
 ```bash
-git clone <repository-url>
-cd oodaa_messenger
-flutter pub get
+git clone https://github.com/Srivatsan-20/messenger.git
+cd messenger
 ```
 
-### 2. Setup Signaling Server
-
+### 2️⃣ Start Signaling Server
 ```bash
-cd signaling_server
+cd signaling-server
 npm install
-npm start
+npm run dev
 ```
+Server will start on `http://localhost:3002` with auto-restart enabled.
 
-The signaling server will run on `http://localhost:3001`
-
-### 3. Configure App
-
-Update the following files with your configuration:
-
-#### `lib/main.dart`
-```dart
-// TODO: Update signaling server URL
-const String SIGNALING_SERVER_URL = 'ws://your-server.com:3001';
-```
-
-#### `lib/webrtc/webrtc_manager.dart`
-```dart
-// TODO: Add your STUN/TURN servers
-static const Map<String, dynamic> _iceServers = {
-  'iceServers': [
-    {'urls': 'stun:stun.l.google.com:19302'},
-    // Add your TURN servers here for better connectivity
-    // {
-    //   'urls': 'turn:your-turn-server.com:3478',
-    //   'username': 'your-username',
-    //   'credential': 'your-password'
-    // }
-  ]
-};
-```
-
-### 4. Run the App
-
+### 3️⃣ Start Flutter App
 ```bash
-flutter run
+# In project root directory
+flutter pub get
+flutter run -d chrome --web-port 3000
 ```
+App will open at `http://localhost:3000`
 
-## 📱 Platform Setup
+### 4️⃣ Test P2P Messaging
+1. **Open two browser windows** (regular + incognito)
+2. **Create identities** in both windows
+3. **Share QR codes** to add contacts
+4. **Start messaging** in real-time!
 
-### Android
-Add permissions to `android/app/src/main/AndroidManifest.xml`:
+## 📱 Mobile Development
 
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-<uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
-```
-
-### iOS
-Add permissions to `ios/Runner/Info.plist`:
-
-```xml
-<key>NSCameraUsageDescription</key>
-<string>Camera access is required for QR code scanning</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>Microphone access is required for voice messages</string>
-<key>NSLocalNetworkUsageDescription</key>
-<string>Local network access is required for peer-to-peer messaging</string>
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>Bluetooth access is required for offline messaging</string>
-```
-
-## 🔧 Configuration TODOs
-
-### Required Configuration (Must Complete)
-
-1. **Signaling Server URL**
-   - File: `lib/main.dart`
-   - Update: `SIGNALING_SERVER_URL` constant
-   - Deploy signaling server and update URL
-
-2. **STUN/TURN Servers**
-   - File: `lib/webrtc/webrtc_manager.dart`
-   - Add your own STUN/TURN servers for better connectivity
-   - Recommended: Twilio, Xirsys, or self-hosted coturn
-
-3. **App Icons and Branding**
-   - Directory: `assets/images/`
-   - Add app icons, splash screens, and branding assets
-   - Update `pubspec.yaml` assets section
-
-4. **Deep Link Scheme**
-   - Files: `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`
-   - Configure `oodaa://` URL scheme for invite links
-
-### Optional Configuration
-
-5. **Custom Fonts**
-   - Directory: `assets/fonts/`
-   - Add custom fonts and update `pubspec.yaml`
-
-6. **App Store Metadata**
-   - Update app name, description, and store listings
-   - Configure signing certificates
-
-7. **Analytics (Privacy-Focused)**
-   - Consider privacy-focused analytics if needed
-   - Ensure no PII collection
-
-## 🏃‍♂️ Development Workflow
-
-### Generate Hive Adapters
+### Build Android APK
 ```bash
-flutter packages pub run build_runner build
-```
+# Debug APK for testing
+flutter build apk --debug
 
-### Run Tests
-```bash
-flutter test
-```
-
-### Build Release
-```bash
-# Android
+# Release APK for distribution
 flutter build apk --release
-flutter build appbundle --release
 
-# iOS
-flutter build ios --release
+# Find APK at: build/app/outputs/flutter-apk/
 ```
 
-## 🚀 Deployment
-
-### Signaling Server Deployment
-
-Deploy to any cloud provider:
-
+### iOS Development
 ```bash
-# Heroku
-git subtree push --prefix signaling_server heroku main
-
-# Railway
-railway deploy
-
-# Docker
-docker build -t oodaa-signaling ./signaling_server
-docker run -p 3001:3001 oodaa-signaling
+# Requires macOS and Xcode
+flutter build ios
 ```
 
-### Mobile App Distribution
+## 🌐 Deployment Options
 
-1. **Google Play Store**
-   - Build signed APK/AAB
-   - Upload to Play Console
-   - Complete store listing
+### Local Network Testing
+1. **Find your IP address**: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+2. **Update server URL** in `lib/networking/webrtc_manager.dart`
+3. **Start server**: `npm run dev`
+4. **Access from other devices**: `http://YOUR_IP:3000`
 
-2. **Apple App Store**
-   - Build signed IPA
-   - Upload via Xcode or Transporter
-   - Complete App Store Connect listing
+### Cloud Deployment
+- **Railway**: Deploy signaling server automatically
+- **Heroku**: Free tier available for server hosting
+- **Netlify/Vercel**: Deploy Flutter web build
+- **See `deploy-guide.md`** for detailed instructions
 
-3. **Direct Distribution**
-   - Build APK for Android sideloading
-   - Use TestFlight for iOS beta testing
+## 🛠️ Development
 
-## 🔒 Security Considerations
+### Key Files to Understand
+- **`lib/main.dart`** - Main app logic and UI
+- **`lib/networking/webrtc_manager.dart`** - WebSocket connection handling
+- **`signaling-server/server.js`** - Server-side message routing
+- **`android/app/src/main/AndroidManifest.xml`** - Android permissions
 
-### Production Checklist
+### Development Workflow
+1. **Start server**: `npm run dev` (auto-restarts on changes)
+2. **Start Flutter**: `flutter run -d chrome`
+3. **Hot reload**: Press `r` in Flutter terminal
+4. **Make changes** - both server and Flutter auto-update
 
-- [ ] Use production STUN/TURN servers
-- [ ] Enable certificate pinning for signaling server
-- [ ] Implement proper key backup/recovery
-- [ ] Add biometric authentication
-- [ ] Enable ProGuard/R8 for Android
-- [ ] Use release signing keys
-- [ ] Implement anti-tampering measures
-- [ ] Add network security config
+### Adding Features
+- **New message types**: Update `webrtc_manager.dart` and `server.js`
+- **UI changes**: Modify `main.dart` or create new screens
+- **Storage**: Use browser localStorage or add database
+- **Security**: Implement end-to-end encryption
 
-### Privacy Compliance
+## 🧪 Testing
 
-- [ ] Update privacy policy
-- [ ] Ensure GDPR compliance (no data collection)
-- [ ] Add data export functionality
-- [ ] Implement secure deletion
-- [ ] Document encryption methods
+### Manual Testing
+```bash
+# Test with multiple users
+# Window 1: Regular browser
+# Window 2: Incognito mode
+# Window 3: Different browser/device
+```
 
-## 🛠️ Development TODOs
+### Automated Testing
+```bash
+# Run Flutter tests
+flutter test
 
-### High Priority
-- [ ] Complete WebRTC connection management
-- [ ] Implement QR code scanner/generator
-- [ ] Add file sharing UI
-- [ ] Implement offline messaging (Bluetooth/Wi-Fi)
-- [ ] Add message status indicators
-- [ ] Implement contact management UI
-- [ ] Fix storage manager box name conflicts
-- [ ] Complete Double Ratchet integration
-- [ ] Add proper error handling throughout
+# Run server tests (if added)
+cd signaling-server
+npm test
+```
 
-### Medium Priority
-- [ ] Add disappearing messages
-- [ ] Implement backup/restore
-- [ ] Add biometric lock
-- [ ] Create settings screens
-- [ ] Add notification system
-- [ ] Implement search functionality
-- [ ] Add proper public key derivation from private keys
-- [ ] Implement BIP39 mnemonic backup
+## 🐛 Troubleshooting
 
-### Low Priority
-- [ ] Add themes/customization
-- [ ] Implement group messaging
-- [ ] Add voice messages
-- [ ] Create onboarding flow
-- [ ] Add accessibility features
-- [ ] Implement app shortcuts
+### Common Issues
 
-### Code Quality
-- [ ] Add comprehensive unit tests
-- [ ] Add integration tests
-- [ ] Improve error handling
-- [ ] Add logging system
-- [ ] Optimize performance
-- [ ] Add code documentation
+**Server won't start**
+```bash
+# Check if port is in use
+netstat -an | findstr :3002
+# Kill process if needed
+taskkill /F /PID <process_id>
+```
 
-## 📄 License
+**Flutter connection fails**
+- Check server is running on port 3002
+- Verify WebSocket URL in `webrtc_manager.dart`
+- Check browser console for errors (F12)
 
-MIT License - See LICENSE file for details.
+**Messages not delivering**
+- Check both clients are connected
+- Verify contact IDs match exactly
+- Check server logs for routing errors
+
+**Data not persisting**
+- Check browser localStorage isn't full
+- Verify not in incognito mode (for persistence)
+- Clear browser data if corrupted
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
+### Getting Started
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make changes** and test thoroughly
+4. **Commit**: `git commit -m 'Add amazing feature'`
+5. **Push**: `git push origin feature/amazing-feature`
+6. **Create Pull Request**
+
+### Code Style
+- **Flutter**: Follow Dart style guide
+- **JavaScript**: Use ES6+ features
+- **Comments**: Document complex logic
+- **Testing**: Add tests for new features
 
 ## 📞 Support
 
-For issues and questions:
-- Create GitHub issues for bugs
-- Check documentation for setup help
-- Review security considerations for production use
+- **Issues**: [GitHub Issues](https://github.com/Srivatsan-20/messenger/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Srivatsan-20/messenger/discussions)
+- **Documentation**: See `deploy-guide.md` for deployment help
 
 ---
 
-**Note**: This is a privacy-focused messaging app. Ensure all configurations maintain the zero-data-collection principle.
+**Built with ❤️ using Flutter and Node.js**
+
+*Ready for real-world P2P messaging! 🚀*
