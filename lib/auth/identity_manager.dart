@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:pointycastle/export.dart';
+import 'package:pointycastle/export.dart' as pc;
 
 import '../models/user_identity.dart';
-import '../crypto/key_generator.dart';
+import '../crypto/key_generator.dart' as kg;
 import '../crypto/x3dh.dart';
-import '../storage/storage_manager.dart';
+import '../storage/simple_storage.dart';
 
 class IdentityManager extends ChangeNotifier {
   static const String _identityKey = 'user_identity';
@@ -18,8 +18,6 @@ class IdentityManager extends ChangeNotifier {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
-      keyCipherForEncryption: KeyCipher.aes_cbc_pkcs7padding,
-      storageCipherForEncryption: StorageCipher.aes_gcm_nopadding,
     ),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
@@ -27,8 +25,8 @@ class IdentityManager extends ChangeNotifier {
   );
 
   UserIdentity? _currentIdentity;
-  AsymmetricKeyPair<PublicKey, PrivateKey>? _identityKeyPair;
-  AsymmetricKeyPair<PublicKey, PrivateKey>? _signingKeyPair;
+  pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey>? _identityKeyPair;
+  pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey>? _signingKeyPair;
   X3DHProtocol? _x3dhProtocol;
 
   UserIdentity? get currentIdentity => _currentIdentity;
@@ -74,39 +72,59 @@ class IdentityManager extends ChangeNotifier {
     String? profilePicturePath,
   }) async {
     try {
+      print('🔧 DEBUG: Starting createIdentity');
+
       // Generate unique user ID
-      final userId = KeyGenerator.generateUserId();
-      
+      print('🔧 DEBUG: Generating user ID');
+      final userId = kg.KeyGenerator.generateUserId();
+      print('🔧 DEBUG: Generated user ID: $userId');
+
       // Generate identity key pair
-      _identityKeyPair = KeyGenerator.generateCurve25519KeyPair();
-      
+      print('🔧 DEBUG: Generating identity key pair');
+      _identityKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
+      print('🔧 DEBUG: Identity key pair generated');
+
       // Generate signing key pair
-      _signingKeyPair = KeyGenerator.generateEd25519KeyPair();
-      
+      print('🔧 DEBUG: Generating signing key pair');
+      _signingKeyPair = kg.KeyGenerator.generateEd25519KeyPair();
+      print('🔧 DEBUG: Signing key pair generated');
+
       // Create user identity
+      print('🔧 DEBUG: Creating UserIdentity object');
       _currentIdentity = UserIdentity(
         userId: userId,
         publicKey: base64.encode(
-          KeyGenerator.publicKeyToBytes(_identityKeyPair!.publicKey)
+          kg.KeyGenerator.publicKeyToBytes(_identityKeyPair!.publicKey)
         ),
         alias: customAlias ?? _generateDefaultAlias(userId),
         profilePicture: profilePicturePath,
         createdAt: DateTime.now(),
         lastSeen: DateTime.now(),
       );
+      print('🔧 DEBUG: UserIdentity created');
 
       // Initialize X3DH protocol
+      print('🔧 DEBUG: Initializing X3DH protocol');
       _x3dhProtocol = X3DHProtocol();
+      print('🔧 DEBUG: X3DH protocol initialized');
 
       // Save to secure storage
+      print('🔧 DEBUG: Saving to secure storage');
       await _saveIdentity();
+      print('🔧 DEBUG: Identity saved');
       await _savePrivateKeys();
+      print('🔧 DEBUG: Private keys saved');
       await _saveX3DHState();
+      print('🔧 DEBUG: X3DH state saved');
 
       // Save to local database
-      await StorageManager.saveUserIdentity(_currentIdentity!);
+      print('🔧 DEBUG: Saving to local database');
+      await SimpleStorage.saveUserIdentity(_currentIdentity!);
+      print('🔧 DEBUG: Saved to local database');
 
+      print('🔧 DEBUG: Notifying listeners');
       notifyListeners();
+      print('🔧 DEBUG: createIdentity completed successfully');
       return _currentIdentity!;
     } catch (e) {
       debugPrint('Error creating identity: $e');
@@ -131,7 +149,7 @@ class IdentityManager extends ChangeNotifier {
     );
 
     await _saveIdentity();
-    await StorageManager.saveUserIdentity(_currentIdentity!);
+    await SimpleStorage.saveUserIdentity(_currentIdentity!);
     notifyListeners();
   }
 
@@ -194,10 +212,10 @@ class IdentityManager extends ChangeNotifier {
       'userId': _currentIdentity!.userId,
       'alias': _currentIdentity!.alias,
       'identityPrivateKey': base64.encode(
-        KeyGenerator.privateKeyToBytes(_identityKeyPair!.privateKey)
+        kg.KeyGenerator.privateKeyToBytes(_identityKeyPair!.privateKey)
       ),
       'signingPrivateKey': base64.encode(
-        KeyGenerator.privateKeyToBytes(_signingKeyPair!.privateKey)
+        kg.KeyGenerator.privateKeyToBytes(_signingKeyPair!.privateKey)
       ),
       'createdAt': _currentIdentity!.createdAt.toIso8601String(),
     };
@@ -215,22 +233,22 @@ class IdentityManager extends ChangeNotifier {
       final backupData = jsonDecode(utf8.decode(base64.decode(backupPhrase)));
 
       // Restore private keys
-      final identityPrivateKey = KeyGenerator.privateKeyFromBytes(
+      final identityPrivateKey = kg.KeyGenerator.privateKeyFromBytes(
         base64.decode(backupData['identityPrivateKey'])
       );
-      final signingPrivateKey = KeyGenerator.privateKeyFromBytes(
+      final signingPrivateKey = kg.KeyGenerator.privateKeyFromBytes(
         base64.decode(backupData['signingPrivateKey']),
         isSigningKey: true,
       );
 
       // Regenerate public keys
       // TODO: Implement proper public key derivation from private keys
-      _identityKeyPair = AsymmetricKeyPair(
-        KeyGenerator.generateCurve25519KeyPair().publicKey, // Placeholder
+      _identityKeyPair = pc.AsymmetricKeyPair(
+        kg.KeyGenerator.generateCurve25519KeyPair().publicKey, // Placeholder
         identityPrivateKey,
       );
-      _signingKeyPair = AsymmetricKeyPair(
-        KeyGenerator.generateEd25519KeyPair().publicKey, // Placeholder
+      _signingKeyPair = pc.AsymmetricKeyPair(
+        kg.KeyGenerator.generateEd25519KeyPair().publicKey, // Placeholder
         signingPrivateKey,
       );
 
@@ -238,7 +256,7 @@ class IdentityManager extends ChangeNotifier {
       _currentIdentity = UserIdentity(
         userId: backupData['userId'],
         publicKey: base64.encode(
-          KeyGenerator.publicKeyToBytes(_identityKeyPair!.publicKey)
+          kg.KeyGenerator.publicKeyToBytes(_identityKeyPair!.publicKey)
         ),
         alias: backupData['alias'],
         createdAt: DateTime.parse(backupData['createdAt']),
@@ -252,7 +270,7 @@ class IdentityManager extends ChangeNotifier {
       await _saveIdentity();
       await _savePrivateKeys();
       await _saveX3DHState();
-      await StorageManager.saveUserIdentity(_currentIdentity!);
+      await SimpleStorage.saveUserIdentity(_currentIdentity!);
 
       notifyListeners();
       return true;
@@ -270,7 +288,7 @@ class IdentityManager extends ChangeNotifier {
       await _secureStorage.delete(key: _signingPrivateKeyKey);
       await _secureStorage.delete(key: _x3dhStateKey);
       
-      await StorageManager.clearAllData();
+      await SimpleStorage.clearAllData();
       
       _currentIdentity = null;
       _identityKeyPair = null;
@@ -300,14 +318,14 @@ class IdentityManager extends ChangeNotifier {
     await _secureStorage.write(
       key: _privateKeyKey,
       value: base64.encode(
-        KeyGenerator.privateKeyToBytes(_identityKeyPair!.privateKey)
+        kg.KeyGenerator.privateKeyToBytes(_identityKeyPair!.privateKey)
       ),
     );
-    
+
     await _secureStorage.write(
       key: _signingPrivateKeyKey,
       value: base64.encode(
-        KeyGenerator.privateKeyToBytes(_signingKeyPair!.privateKey)
+        kg.KeyGenerator.privateKeyToBytes(_signingKeyPair!.privateKey)
       ),
     );
   }
@@ -317,21 +335,21 @@ class IdentityManager extends ChangeNotifier {
     final signingPrivateKeyData = await _secureStorage.read(key: _signingPrivateKeyKey);
     
     if (privateKeyData != null && signingPrivateKeyData != null) {
-      final identityPrivateKey = KeyGenerator.privateKeyFromBytes(
+      final identityPrivateKey = kg.KeyGenerator.privateKeyFromBytes(
         base64.decode(privateKeyData)
       );
-      final signingPrivateKey = KeyGenerator.privateKeyFromBytes(
+      final signingPrivateKey = kg.KeyGenerator.privateKeyFromBytes(
         base64.decode(signingPrivateKeyData),
         isSigningKey: true,
       );
-      
+
       // TODO: Derive public keys from private keys properly
-      _identityKeyPair = AsymmetricKeyPair(
-        KeyGenerator.publicKeyFromBytes(base64.decode(_currentIdentity!.publicKey)),
+      _identityKeyPair = pc.AsymmetricKeyPair(
+        kg.KeyGenerator.publicKeyFromBytes(base64.decode(_currentIdentity!.publicKey)),
         identityPrivateKey,
       );
-      _signingKeyPair = AsymmetricKeyPair(
-        KeyGenerator.generateEd25519KeyPair().publicKey, // Placeholder
+      _signingKeyPair = pc.AsymmetricKeyPair(
+        kg.KeyGenerator.generateEd25519KeyPair().publicKey, // Placeholder
         signingPrivateKey,
       );
     }
@@ -381,5 +399,57 @@ class IdentityManager extends ChangeNotifier {
     }
     
     return '$emoji $displayName';
+  }
+
+  // Export identity for backup
+  Future<void> exportIdentity() async {
+    if (_currentIdentity == null) {
+      throw StateError('No identity to export');
+    }
+
+    try {
+      final backupData = await generateBackupPhrase();
+      final jsonData = jsonEncode(backupData);
+
+      // For now, just save to a file (in a real app, you'd use file picker)
+      // This is a simplified implementation
+      await _secureStorage.write(
+        key: 'identity_backup_${DateTime.now().millisecondsSinceEpoch}',
+        value: jsonData,
+      );
+
+      debugPrint('Identity exported successfully');
+    } catch (e) {
+      debugPrint('Error exporting identity: $e');
+      rethrow;
+    }
+  }
+
+  // Import identity from backup
+  Future<void> importIdentity() async {
+    try {
+      // For now, just read from the most recent backup
+      // In a real app, you'd use file picker to select the backup file
+      final keys = await _secureStorage.readAll();
+      String? backupData;
+
+      for (final key in keys.keys) {
+        if (key.startsWith('identity_backup_')) {
+          backupData = keys[key];
+          break;
+        }
+      }
+
+      if (backupData == null) {
+        throw StateError('No backup found');
+      }
+
+      await restoreFromBackup(backupData);
+
+      debugPrint('Identity imported successfully');
+    } catch (e) {
+      debugPrint('Error importing identity: $e');
+      rethrow;
+    }
   }
 }

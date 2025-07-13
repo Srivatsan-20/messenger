@@ -1,24 +1,24 @@
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:pointycastle/export.dart';
-import 'key_generator.dart';
+import 'package:pointycastle/export.dart' as pc;
+import 'key_generator.dart' as kg;
 import 'encryption.dart';
 
 // X3DH (Extended Triple Diffie-Hellman) Key Agreement Protocol
 // Used for initial key exchange between two parties
 class X3DHProtocol {
   // Identity key pair (long-term)
-  late AsymmetricKeyPair<PublicKey, PrivateKey> identityKeyPair;
-  
+  late pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey> identityKeyPair;
+
   // Signed prekey (medium-term, rotated periodically)
-  late AsymmetricKeyPair<PublicKey, PrivateKey> signedPreKeyPair;
+  late pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey> signedPreKeyPair;
   late Uint8List signedPreKeySignature;
-  
+
   // One-time prekeys (short-term, used once)
-  final List<AsymmetricKeyPair<PublicKey, PrivateKey>> oneTimePreKeys = [];
+  final List<pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey>> oneTimePreKeys = [];
   
   // Signing key pair for signatures
-  late AsymmetricKeyPair<PublicKey, PrivateKey> signingKeyPair;
+  late pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey> signingKeyPair;
 
   X3DHProtocol() {
     _generateKeys();
@@ -26,19 +26,19 @@ class X3DHProtocol {
 
   void _generateKeys() {
     // Generate identity key pair
-    identityKeyPair = KeyGenerator.generateCurve25519KeyPair();
-    
+    identityKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
+
     // Generate signing key pair
-    signingKeyPair = KeyGenerator.generateEd25519KeyPair();
-    
+    signingKeyPair = kg.KeyGenerator.generateEd25519KeyPair();
+
     // Generate signed prekey
-    signedPreKeyPair = KeyGenerator.generateCurve25519KeyPair();
-    
+    signedPreKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
+
     // Sign the prekey
-    final preKeyBytes = KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey);
+    final preKeyBytes = kg.KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey);
     signedPreKeySignature = EncryptionService.sign(
       preKeyBytes,
-      signingKeyPair.privateKey as Ed25519PrivateKey,
+      signingKeyPair.privateKey as pc.RSAPrivateKey, // Updated type
     );
     
     // Generate one-time prekeys
@@ -48,19 +48,19 @@ class X3DHProtocol {
   void _generateOneTimePreKeys(int count) {
     oneTimePreKeys.clear();
     for (int i = 0; i < count; i++) {
-      oneTimePreKeys.add(KeyGenerator.generateCurve25519KeyPair());
+      oneTimePreKeys.add(kg.KeyGenerator.generateCurve25519KeyPair());
     }
   }
 
   // Get public key bundle for sharing
   Map<String, dynamic> getPublicKeyBundle() {
     return {
-      'identityKey': base64.encode(KeyGenerator.publicKeyToBytes(identityKeyPair.publicKey)),
-      'signingKey': base64.encode(KeyGenerator.publicKeyToBytes(signingKeyPair.publicKey)),
-      'signedPreKey': base64.encode(KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey)),
+      'identityKey': base64.encode(kg.KeyGenerator.publicKeyToBytes(identityKeyPair.publicKey)),
+      'signingKey': base64.encode(kg.KeyGenerator.publicKeyToBytes(signingKeyPair.publicKey)),
+      'signedPreKey': base64.encode(kg.KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey)),
       'signedPreKeySignature': base64.encode(signedPreKeySignature),
-      'oneTimePreKeys': oneTimePreKeys.map((kp) => 
-        base64.encode(KeyGenerator.publicKeyToBytes(kp.publicKey))
+      'oneTimePreKeys': oneTimePreKeys.map((kp) =>
+        base64.encode(kg.KeyGenerator.publicKeyToBytes(kp.publicKey))
       ).toList(),
     };
   }
@@ -68,40 +68,40 @@ class X3DHProtocol {
   // Perform X3DH as initiator (Alice)
   Map<String, dynamic> performX3DHInitiator(Map<String, dynamic> bobBundle) {
     // Parse Bob's bundle
-    final bobIdentityKey = KeyGenerator.publicKeyFromBytes(
+    final bobIdentityKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(bobBundle['identityKey'])
     );
-    final bobSigningKey = KeyGenerator.publicKeyFromBytes(
+    final bobSigningKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(bobBundle['signingKey']),
       isSigningKey: true,
     );
-    final bobSignedPreKey = KeyGenerator.publicKeyFromBytes(
+    final bobSignedPreKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(bobBundle['signedPreKey'])
     );
     final bobSignature = base64.decode(bobBundle['signedPreKeySignature']);
-    
+
     // Verify Bob's signed prekey
-    final preKeyBytes = KeyGenerator.publicKeyToBytes(bobSignedPreKey);
+    final preKeyBytes = kg.KeyGenerator.publicKeyToBytes(bobSignedPreKey);
     if (!EncryptionService.verifySignature(
       preKeyBytes,
       bobSignature,
-      bobSigningKey as Ed25519PublicKey,
+      bobSigningKey as pc.RSAPublicKey, // Updated type
     )) {
       throw Exception('Invalid signed prekey signature');
     }
     
     // Select a one-time prekey (if available)
-    PublicKey? bobOneTimePreKey;
-    if (bobBundle['oneTimePreKeys'] != null && 
+    pc.PublicKey? bobOneTimePreKey;
+    if (bobBundle['oneTimePreKeys'] != null &&
         (bobBundle['oneTimePreKeys'] as List).isNotEmpty) {
       final oneTimeKeys = bobBundle['oneTimePreKeys'] as List;
-      bobOneTimePreKey = KeyGenerator.publicKeyFromBytes(
+      bobOneTimePreKey = kg.KeyGenerator.publicKeyFromBytes(
         base64.decode(oneTimeKeys.first)
       );
     }
-    
+
     // Generate ephemeral key pair
-    final ephemeralKeyPair = KeyGenerator.generateCurve25519KeyPair();
+    final ephemeralKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
     
     // Perform the four DH operations
     final dh1 = EncryptionService.performECDH(
@@ -142,7 +142,7 @@ class X3DHProtocol {
     return {
       'sharedSecret': sharedSecret,
       'ephemeralPublicKey': base64.encode(
-        KeyGenerator.publicKeyToBytes(ephemeralKeyPair.publicKey)
+        kg.KeyGenerator.publicKeyToBytes(ephemeralKeyPair.publicKey)
       ),
       'usedOneTimePreKey': bobOneTimePreKey != null,
     };
@@ -155,10 +155,10 @@ class X3DHProtocol {
     bool usedOneTimePreKey,
   ) {
     // Parse Alice's keys
-    final aliceIdentityPubKey = KeyGenerator.publicKeyFromBytes(
+    final aliceIdentityPubKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(aliceIdentityKey)
     );
-    final aliceEphemeralPubKey = KeyGenerator.publicKeyFromBytes(
+    final aliceEphemeralPubKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(aliceEphemeralKey)
     );
     
@@ -207,7 +207,7 @@ class X3DHProtocol {
     const salt = 'OodaaMessengerX3DH';
     const info = 'OodaaMessengerSharedSecret';
     
-    return KeyGenerator.hkdf(
+    return kg.KeyGenerator.hkdf(
       dhOutputs,
       utf8.encode(salt),
       utf8.encode(info),
@@ -217,12 +217,12 @@ class X3DHProtocol {
 
   // Rotate signed prekey (should be done periodically)
   void rotateSignedPreKey() {
-    signedPreKeyPair = KeyGenerator.generateCurve25519KeyPair();
-    
-    final preKeyBytes = KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey);
+    signedPreKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
+
+    final preKeyBytes = kg.KeyGenerator.publicKeyToBytes(signedPreKeyPair.publicKey);
     signedPreKeySignature = EncryptionService.sign(
       preKeyBytes,
-      signingKeyPair.privateKey as Ed25519PrivateKey,
+      signingKeyPair.privateKey as pc.RSAPrivateKey, // Updated type
     );
   }
 

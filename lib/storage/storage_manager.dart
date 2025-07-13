@@ -11,12 +11,12 @@ import '../crypto/encryption.dart';
 
 class StorageManager {
   static const String _encryptionKeyKey = 'hive_encryption_key';
-  static const String _userIdentityBox = 'user_identity';
-  static const String _contactsBox = 'contacts';
-  static const String _messagesBox = 'messages';
-  static const String _conversationsBox = 'conversations';
-  static const String _ratchetStatesBox = 'ratchet_states';
-  static const String _settingsBox = 'settings';
+  static const String _userIdentityBox = 'user_identity_v2';
+  static const String _contactsBox = 'contacts_v2';
+  static const String _messagesBox = 'messages_v2';
+  static const String _conversationsBox = 'conversations_v2';
+  static const String _ratchetStatesBox = 'ratchet_states_v2';
+  static const String _settingsBox = 'settings_v2';
 
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(
@@ -37,47 +37,38 @@ class StorageManager {
 
   // Initialize storage
   static Future<void> initialize() async {
-    // Register Hive adapters
-    Hive.registerAdapter(UserIdentityAdapter());
-    Hive.registerAdapter(ContactAdapter());
-    Hive.registerAdapter(MessageAdapter());
-    Hive.registerAdapter(MessageStatusAdapter());
-    Hive.registerAdapter(MessageTypeAdapter());
-    Hive.registerAdapter(ContactStatusAdapter());
+    print('🔧 DEBUG: Initializing storage with fresh database names');
 
-    // Get or generate encryption key
-    await _initializeEncryptionKey();
+    // Register Hive adapters only if not already registered
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(UserIdentityAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(ContactAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(MessageAdapter());
+    }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(MessageStatusAdapter());
+    }
+    if (!Hive.isAdapterRegistered(4)) {
+      Hive.registerAdapter(MessageTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(ContactStatusAdapter());
+    }
 
-    // Open encrypted boxes
-    _userIdentityBoxInstance = await Hive.openBox<UserIdentity>(
-      _userIdentityBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
+    print('🔧 DEBUG: Opening fresh boxes without encryption');
+    // Open boxes without encryption for now (to avoid corruption issues)
+    _userIdentityBoxInstance = await Hive.openBox<UserIdentity>(_userIdentityBox);
+    _contactsBoxInstance = await Hive.openBox<Contact>(_contactsBox);
+    _messagesBoxInstance = await Hive.openBox<Message>(_messagesBox);
+    _conversationsBoxInstance = await Hive.openBox<Map>(_conversationsBox);
+    _ratchetStatesBoxInstance = await Hive.openBox<Map>(_ratchetStatesBox);
+    _settingsBoxInstance = await Hive.openBox<Map>(_settingsBox);
 
-    _contactsBoxInstance = await Hive.openBox<Contact>(
-      _contactsBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
-
-    _messagesBoxInstance = await Hive.openBox<Message>(
-      _messagesBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
-
-    _conversationsBoxInstance = await Hive.openBox<Map>(
-      _conversationsBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
-
-    _ratchetStatesBoxInstance = await Hive.openBox<Map>(
-      _ratchetStatesBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
-
-    _settingsBoxInstance = await Hive.openBox<Map>(
-      _settingsBox,
-      encryptionCipher: HiveAesCipher(_encryptionKey),
-    );
+    print('🔧 DEBUG: Storage initialized successfully with fresh database');
   }
 
   // User Identity Management
@@ -280,6 +271,21 @@ class StorageManager {
       'settings': getAllSettings(),
       'exportedAt': DateTime.now().toIso8601String(),
     };
+  }
+
+  // Get all conversations (contact IDs that have messages)
+  static List<String> getAllConversations() {
+    final conversations = <String>[];
+    final messages = _messagesBoxInstance.values;
+
+    for (final message in messages) {
+      final conversationId = message.conversationId;
+      if (!conversations.contains(conversationId)) {
+        conversations.add(conversationId);
+      }
+    }
+
+    return conversations;
   }
 
   // Clear all data (factory reset)

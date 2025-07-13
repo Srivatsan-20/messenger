@@ -31,15 +31,22 @@ class _QRDisplayScreenState extends State<QRDisplayScreen> {
 
   Future<void> _loadQRData() async {
     try {
+      print('🔧 DEBUG: Loading QR data');
       if (widget.contactUserId == null) {
         // Show own QR code
+        print('🔧 DEBUG: Showing own QR code');
         final identityManager = context.read<IdentityManager>();
         final identity = identityManager.currentIdentity;
-        
+
+        print('🔧 DEBUG: Current identity: ${identity?.userId}');
         if (identity != null) {
+          print('🔧 DEBUG: Generating QR data');
           _qrData = identity.toQRData();
           _displayName = identity.alias;
           _userId = identity.userId;
+          print('🔧 DEBUG: QR data generated: $_qrData');
+        } else {
+          print('🔧 DEBUG: No current identity found');
         }
       } else {
         // Show contact's QR code
@@ -53,8 +60,10 @@ class _QRDisplayScreenState extends State<QRDisplayScreen> {
         }
       }
     } catch (e) {
+      print('🔧 DEBUG: Error loading QR data: $e');
       debugPrint('Error loading QR data: $e');
     } finally {
+      print('🔧 DEBUG: Setting loading to false');
       setState(() {
         _isLoading = false;
       });

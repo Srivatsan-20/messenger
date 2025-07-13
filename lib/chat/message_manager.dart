@@ -7,7 +7,7 @@ import 'package:crypto/crypto.dart';
 
 import '../models/message.dart';
 import '../models/contact.dart';
-import '../storage/storage_manager.dart';
+import '../storage/simple_storage.dart';
 import '../crypto/double_ratchet.dart';
 import '../crypto/encryption.dart';
 import '../webrtc/webrtc_manager.dart';
@@ -496,6 +496,51 @@ class MessageManager extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // Get all conversations (contact IDs with messages)
+  List<String> getConversations() {
+    final conversations = <String>[];
+
+    // Get from cache
+    conversations.addAll(_conversationMessages.keys);
+
+    // Get from storage
+    final storageConversations = StorageManager.getAllConversations();
+    for (final conversationId in storageConversations) {
+      if (!conversations.contains(conversationId)) {
+        conversations.add(conversationId);
+      }
+    }
+
+    // Sort by last message time
+    conversations.sort((a, b) {
+      final lastMessageA = getLastMessage(a);
+      final lastMessageB = getLastMessage(b);
+
+      if (lastMessageA == null && lastMessageB == null) return 0;
+      if (lastMessageA == null) return 1;
+      if (lastMessageB == null) return -1;
+
+      return lastMessageB.timestamp.compareTo(lastMessageA.timestamp);
+    });
+
+    return conversations;
+  }
+
+  // Get last message for a conversation
+  Message? getLastMessage(String conversationId) {
+    // Check cache first
+    if (_conversationMessages.containsKey(conversationId)) {
+      final messages = _conversationMessages[conversationId]!;
+      if (messages.isNotEmpty) {
+        return messages.last;
+      }
+    }
+
+    // Get from storage
+    final messages = StorageManager.getConversationMessages(conversationId, limit: 1);
+    return messages.isNotEmpty ? messages.first : null;
   }
 
   // Generate secure random bytes

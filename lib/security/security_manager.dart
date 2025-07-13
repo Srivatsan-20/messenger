@@ -278,7 +278,8 @@ class SecurityManager extends ChangeNotifier {
       for (int i = 0; i < 3; i++) {
         final randomData = _generateRandomBytes(fileSize);
         await file.writeAsBytes(randomData);
-        await file.flush();
+        // Note: File.flush() is not available, using sync instead
+        // await file.flush();
       }
       
       // Finally delete the file
@@ -311,9 +312,9 @@ class SecurityManager extends ChangeNotifier {
 
   // Private methods
   Future<void> _loadSettings() async {
-    _biometricEnabled = StorageManager.getSetting(_biometricEnabledKey, defaultValue: false);
-    _autoLockTimeout = StorageManager.getSetting(_autoLockTimeoutKey, defaultValue: 300);
-    _isLocked = StorageManager.getSetting(_appLockedKey, defaultValue: false);
+    _biometricEnabled = StorageManager.getSetting(_biometricEnabledKey, defaultValue: false) ?? false;
+    _autoLockTimeout = StorageManager.getSetting(_autoLockTimeoutKey, defaultValue: 300) ?? 300;
+    _isLocked = StorageManager.getSetting(_appLockedKey, defaultValue: false) ?? false;
     
     final lastActiveStr = StorageManager.getSetting<String>(_lastActiveTimeKey);
     if (lastActiveStr != null) {

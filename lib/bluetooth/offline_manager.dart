@@ -218,7 +218,8 @@ class OfflineManager extends ChangeNotifier {
     }
   }
 
-  void _onEndpointLost(String endpointId) {
+  void _onEndpointLost(String? endpointId) {
+    if (endpointId == null) return;
     debugPrint('Endpoint lost: $endpointId');
     _discoveredPeers.remove(endpointId);
     notifyListeners();

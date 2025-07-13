@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:pointycastle/export.dart';
-import 'key_generator.dart';
+import 'package:pointycastle/export.dart' as pc;
+import 'key_generator.dart' as kg;
 import 'encryption.dart';
 
 // Double Ratchet Protocol for forward secrecy
@@ -11,11 +11,11 @@ class DoubleRatchet {
   
   // Sending chain
   Uint8List? sendingChainKey;
-  AsymmetricKeyPair<PublicKey, PrivateKey>? sendingRatchetKeyPair;
-  
+  pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey>? sendingRatchetKeyPair;
+
   // Receiving chain
   Uint8List? receivingChainKey;
-  PublicKey? receivingRatchetPublicKey;
+  pc.PublicKey? receivingRatchetPublicKey;
   
   // Message numbers
   int sendingMessageNumber = 0;
@@ -31,15 +31,15 @@ class DoubleRatchet {
   DoubleRatchet({required this.rootKey});
 
   // Initialize as sender (Alice)
-  void initializeAsSender(PublicKey bobRatchetPublicKey) {
+  void initializeAsSender(pc.PublicKey bobRatchetPublicKey) {
     receivingRatchetPublicKey = bobRatchetPublicKey;
-    sendingRatchetKeyPair = KeyGenerator.generateCurve25519KeyPair();
+    sendingRatchetKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
     
     _performDHRatchetStep();
   }
 
   // Initialize as receiver (Bob)
-  void initializeAsReceiver(AsymmetricKeyPair<PublicKey, PrivateKey> ratchetKeyPair) {
+  void initializeAsReceiver(pc.AsymmetricKeyPair<pc.PublicKey, pc.PrivateKey> ratchetKeyPair) {
     sendingRatchetKeyPair = ratchetKeyPair;
   }
 
@@ -50,7 +50,7 @@ class DoubleRatchet {
     }
 
     // Derive message keys
-    final messageKeys = KeyGenerator.deriveMessageKeys(sendingChainKey!);
+    final messageKeys = kg.KeyGenerator.deriveMessageKeys(sendingChainKey!);
     sendingChainKey = messageKeys['nextChainKey'];
     
     // Encrypt the message
@@ -81,7 +81,7 @@ class DoubleRatchet {
     final messageNumber = encryptedMessage['messageNumber'] as int;
     
     // Check if we need to perform DH ratchet step
-    final senderRatchetPublicKey = KeyGenerator.publicKeyFromBytes(
+    final senderRatchetPublicKey = kg.KeyGenerator.publicKeyFromBytes(
       base64.decode(header['publicKey'])
     );
     
@@ -105,7 +105,7 @@ class DoubleRatchet {
       throw StateError('Receiving chain not initialized');
     }
     
-    final messageKeys = KeyGenerator.deriveMessageKeys(receivingChainKey!);
+    final messageKeys = kg.KeyGenerator.deriveMessageKeys(receivingChainKey!);
     receivingChainKey = messageKeys['nextChainKey'];
     
     receivingMessageNumber++;
@@ -114,7 +114,7 @@ class DoubleRatchet {
   }
 
   // Perform DH ratchet step
-  void _performDHRatchetStep([PublicKey? remotePublicKey]) {
+  void _performDHRatchetStep([pc.PublicKey? remotePublicKey]) {
     if (remotePublicKey != null) {
       // Receiving ratchet step
       receivingRatchetPublicKey = remotePublicKey;
@@ -125,23 +125,23 @@ class DoubleRatchet {
           remotePublicKey,
         );
         
-        final derived = KeyGenerator.deriveRatchetKeys(rootKey, dhOutput);
+        final derived = kg.KeyGenerator.deriveRatchetKeys(rootKey, dhOutput);
         rootKey = derived['rootKey']!;
         receivingChainKey = derived['chainKey'];
         receivingMessageNumber = 0;
       }
-      
+
       // Sending ratchet step
       previousSendingChainLength = sendingMessageNumber;
       sendingMessageNumber = 0;
-      sendingRatchetKeyPair = KeyGenerator.generateCurve25519KeyPair();
-      
+      sendingRatchetKeyPair = kg.KeyGenerator.generateCurve25519KeyPair();
+
       final dhOutput2 = EncryptionService.performECDH(
         sendingRatchetKeyPair!.privateKey,
         remotePublicKey,
       );
-      
-      final derived2 = KeyGenerator.deriveRatchetKeys(rootKey, dhOutput2);
+
+      final derived2 = kg.KeyGenerator.deriveRatchetKeys(rootKey, dhOutput2);
       rootKey = derived2['rootKey']!;
       sendingChainKey = derived2['chainKey'];
     } else {
@@ -152,7 +152,7 @@ class DoubleRatchet {
           receivingRatchetPublicKey!,
         );
         
-        final derived = KeyGenerator.deriveRatchetKeys(rootKey, dhOutput);
+        final derived = kg.KeyGenerator.deriveRatchetKeys(rootKey, dhOutput);
         rootKey = derived['rootKey']!;
         sendingChainKey = derived['chainKey'];
       }
@@ -167,7 +167,7 @@ class DoubleRatchet {
     
     return {
       'publicKey': base64.encode(
-        KeyGenerator.publicKeyToBytes(sendingRatchetKeyPair!.publicKey)
+        kg.KeyGenerator.publicKeyToBytes(sendingRatchetKeyPair!.publicKey)
       ),
       'previousChainLength': previousSendingChainLength,
       'messageNumber': sendingMessageNumber,
@@ -179,10 +179,10 @@ class DoubleRatchet {
     if (receivingChainKey == null) return;
     
     while (receivingMessageNumber < untilMessageNumber) {
-      final messageKeys = KeyGenerator.deriveMessageKeys(receivingChainKey!);
+      final messageKeys = kg.KeyGenerator.deriveMessageKeys(receivingChainKey!);
       receivingChainKey = messageKeys['nextChainKey'];
-      
-      final keyId = '${base64.encode(KeyGenerator.publicKeyToBytes(receivingRatchetPublicKey!))}_$receivingMessageNumber';
+
+      final keyId = '${base64.encode(kg.KeyGenerator.publicKeyToBytes(receivingRatchetPublicKey!))}_$receivingMessageNumber';
       skippedMessageKeys[keyId] = messageKeys['encryptionKey']!;
       
       receivingMessageNumber++;
@@ -214,9 +214,9 @@ class DoubleRatchet {
   }
 
   // Compare public keys
-  bool _publicKeysEqual(PublicKey key1, PublicKey key2) {
-    final bytes1 = KeyGenerator.publicKeyToBytes(key1);
-    final bytes2 = KeyGenerator.publicKeyToBytes(key2);
+  bool _publicKeysEqual(pc.PublicKey key1, pc.PublicKey key2) {
+    final bytes1 = kg.KeyGenerator.publicKeyToBytes(key1);
+    final bytes2 = kg.KeyGenerator.publicKeyToBytes(key2);
     
     return EncryptionService.constantTimeEquals(bytes1, bytes2);
   }
@@ -227,14 +227,14 @@ class DoubleRatchet {
       'rootKey': base64.encode(rootKey),
       'sendingChainKey': sendingChainKey != null ? base64.encode(sendingChainKey!) : null,
       'receivingChainKey': receivingChainKey != null ? base64.encode(receivingChainKey!) : null,
-      'sendingRatchetPrivateKey': sendingRatchetKeyPair != null 
-        ? base64.encode(KeyGenerator.privateKeyToBytes(sendingRatchetKeyPair!.privateKey))
+      'sendingRatchetPrivateKey': sendingRatchetKeyPair != null
+        ? base64.encode(kg.KeyGenerator.privateKeyToBytes(sendingRatchetKeyPair!.privateKey))
         : null,
       'sendingRatchetPublicKey': sendingRatchetKeyPair != null
-        ? base64.encode(KeyGenerator.publicKeyToBytes(sendingRatchetKeyPair!.publicKey))
+        ? base64.encode(kg.KeyGenerator.publicKeyToBytes(sendingRatchetKeyPair!.publicKey))
         : null,
       'receivingRatchetPublicKey': receivingRatchetPublicKey != null
-        ? base64.encode(KeyGenerator.publicKeyToBytes(receivingRatchetPublicKey!))
+        ? base64.encode(kg.KeyGenerator.publicKeyToBytes(receivingRatchetPublicKey!))
         : null,
       'sendingMessageNumber': sendingMessageNumber,
       'receivingMessageNumber': receivingMessageNumber,
@@ -258,17 +258,17 @@ class DoubleRatchet {
     }
     
     if (data['sendingRatchetPrivateKey'] != null && data['sendingRatchetPublicKey'] != null) {
-      final privateKey = KeyGenerator.privateKeyFromBytes(
+      final privateKey = kg.KeyGenerator.privateKeyFromBytes(
         base64.decode(data['sendingRatchetPrivateKey'])
       );
-      final publicKey = KeyGenerator.publicKeyFromBytes(
+      final publicKey = kg.KeyGenerator.publicKeyFromBytes(
         base64.decode(data['sendingRatchetPublicKey'])
       );
-      ratchet.sendingRatchetKeyPair = AsymmetricKeyPair(publicKey, privateKey);
+      ratchet.sendingRatchetKeyPair = pc.AsymmetricKeyPair(publicKey, privateKey);
     }
-    
+
     if (data['receivingRatchetPublicKey'] != null) {
-      ratchet.receivingRatchetPublicKey = KeyGenerator.publicKeyFromBytes(
+      ratchet.receivingRatchetPublicKey = kg.KeyGenerator.publicKeyFromBytes(
         base64.decode(data['receivingRatchetPublicKey'])
       );
     }

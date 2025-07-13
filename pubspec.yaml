@@ -15,7 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   
   # WebRTC for P2P communication
-  flutter_webrtc: ^0.9.48
+  flutter_webrtc: ^0.11.7
   
   # Local storage and encryption
   hive: ^2.2.3
@@ -29,10 +29,10 @@ dependencies:
   
   # QR Code functionality
   qr_flutter: ^4.1.0
-  qr_code_scanner: ^1.0.1
+  mobile_scanner: ^3.5.7
   
   # Nearby connections and Bluetooth
-  nearby_connections: ^5.0.1
+  nearby_connections: ^4.3.0
   flutter_bluetooth_serial: ^0.4.0
   
   # File handling and media

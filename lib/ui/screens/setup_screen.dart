@@ -24,27 +24,38 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Future<void> _createIdentity() async {
-    if (!_formKey.currentState!.validate()) return;
+    print('🔧 DEBUG: _createIdentity called');
 
+    if (!_formKey.currentState!.validate()) {
+      print('🔧 DEBUG: Form validation failed');
+      return;
+    }
+
+    print('🔧 DEBUG: Setting _isCreating to true');
     setState(() {
       _isCreating = true;
     });
 
     try {
+      print('🔧 DEBUG: Getting IdentityManager');
       final identityManager = context.read<IdentityManager>();
-      
-      final alias = _aliasController.text.trim().isEmpty 
-          ? null 
+
+      final alias = _aliasController.text.trim().isEmpty
+          ? null
           : _aliasController.text.trim();
-      
+
+      print('🔧 DEBUG: Creating identity with alias: $alias');
       await identityManager.createIdentity(customAlias: alias);
-      
+
+      print('🔧 DEBUG: Identity created successfully, navigating to home');
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
     } catch (e) {
+      print('🔧 DEBUG: Error creating identity: $e');
+      print('🔧 DEBUG: Stack trace: ${StackTrace.current}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -211,7 +222,14 @@ class _SetupScreenState extends State<SetupScreen> {
                 
                 // Create identity button
                 ElevatedButton(
-                  onPressed: _isCreating ? null : _createIdentity,
+                  onPressed: () {
+                    print('🔧 DEBUG: Create Identity button pressed!');
+                    if (_isCreating) {
+                      print('🔧 DEBUG: Already creating, ignoring press');
+                      return;
+                    }
+                    _createIdentity();
+                  },
                   child: _isCreating
                       ? const SizedBox(
                           height: 20,
@@ -229,8 +247,10 @@ class _SetupScreenState extends State<SetupScreen> {
                 // Advanced options
                 TextButton(
                   onPressed: () {
+                    print('🔧 DEBUG: Advanced options button pressed');
                     setState(() {
                       _showAdvanced = !_showAdvanced;
+                      print('🔧 DEBUG: _showAdvanced is now: $_showAdvanced');
                     });
                   },
                   child: Row(

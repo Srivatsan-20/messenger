@@ -1,0 +1,21 @@
+{
+  "name": "oodaa-signaling-server",
+  "version": "1.0.0",
+  "description": "WebRTC signaling server for Oodaa Messenger",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js --watch server.js",
+    "dev-verbose": "nodemon server.js --watch server.js --verbose"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["webrtc", "signaling", "p2p", "messenger"],
+  "author": "Oodaa Team",
+  "license": "MIT"
+}

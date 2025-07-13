@@ -5,7 +5,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/contact.dart';
 import '../models/user_identity.dart';
-import '../storage/storage_manager.dart';
+import '../storage/simple_storage.dart';
 import '../auth/identity_manager.dart';
 import '../crypto/double_ratchet.dart';
 
@@ -26,8 +26,8 @@ class ContactManager extends ChangeNotifier {
 
   // Load contacts from storage
   Future<void> _loadContacts() async {
-    _contacts = StorageManager.getAllContacts();
-    _onlineContacts = StorageManager.getOnlineContacts();
+    _contacts = SimpleStorage.getAllContacts();
+    _onlineContacts = []; // SimpleStorage doesn't track online status yet
     notifyListeners();
   }
 
@@ -56,7 +56,7 @@ class ContactManager extends ChangeNotifier {
       final contact = Contact.fromUserIdentity(identity);
       
       // Save to storage
-      await StorageManager.saveContact(contact);
+      await SimpleStorage.saveContact(contact);
       
       // Add to local list
       _contacts.add(contact);
@@ -90,7 +90,7 @@ class ContactManager extends ChangeNotifier {
 
   // Update contact
   Future<void> updateContact(Contact contact) async {
-    await StorageManager.saveContact(contact);
+    await SimpleStorage.saveContact(contact);
     
     final index = _contacts.indexWhere((c) => c.userId == contact.userId);
     if (index != -1) {
@@ -101,9 +101,9 @@ class ContactManager extends ChangeNotifier {
 
   // Delete contact
   Future<void> deleteContact(String userId) async {
-    await StorageManager.deleteContact(userId);
-    await StorageManager.deleteConversationMessages(_getConversationId(userId));
-    await StorageManager.deleteRatchetState(userId);
+    await SimpleStorage.deleteContact(userId);
+    await SimpleStorage.deleteConversation(_getConversationId(userId));
+    // Note: SimpleStorage doesn't have ratchet states yet
     
     _contacts.removeWhere((c) => c.userId == userId);
     _onlineContacts.removeWhere((c) => c.userId == userId);
@@ -256,7 +256,7 @@ class ContactManager extends ChangeNotifier {
           
           // Check if contact already exists
           if (!_contacts.any((c) => c.userId == contact.userId)) {
-            await StorageManager.saveContact(contact);
+            await SimpleStorage.saveContact(contact);
             _contacts.add(contact);
             importedCount++;
           }
@@ -306,8 +306,8 @@ class ContactManager extends ChangeNotifier {
       // Initialize Double Ratchet
       final ratchet = DoubleRatchet(rootKey: result['sharedSecret']);
       
-      // Save ratchet state
-      await StorageManager.saveRatchetState(contactUserId, ratchet.serialize());
+      // Save ratchet state (simplified for now)
+      await SimpleStorage.saveSetting('ratchet_$contactUserId', ratchet.serialize());
       
       // Update contact status
       contact.status = ContactStatus.connected;
