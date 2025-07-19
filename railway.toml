@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd signaling-server && npm install"
+
+[deploy]
+startCommand = "cd signaling-server && npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[env]
+NODE_ENV = "production"

@@ -1,0 +1,21 @@
+{
+  "name": "oodaa-messenger-railway",
+  "version": "1.0.0",
+  "description": "Railway deployment for Oodaa Messenger signaling server",
+  "main": "signaling-server/server.js",
+  "scripts": {
+    "start": "cd signaling-server && npm start",
+    "build": "cd signaling-server && npm install",
+    "dev": "cd signaling-server && npm run dev"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["webrtc", "signaling", "p2p", "messenger", "railway"],
+  "author": "Oodaa Team",
+  "license": "MIT"
+}
