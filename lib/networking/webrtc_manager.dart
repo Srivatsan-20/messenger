@@ -26,6 +26,7 @@ class WebRTCManager extends ChangeNotifier {
   // Connect to signaling server
   Future<bool> connect() async {
     try {
+      print('🔄 Attempting to connect to: $signalingServerUrl');
       print('🌐 Connecting to signaling server at $signalingServerUrl...');
 
       _channel = WebSocketChannel.connect(Uri.parse(signalingServerUrl));

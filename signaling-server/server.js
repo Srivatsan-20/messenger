@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const http = require('http');
 
 const PORT = process.env.PORT || 3002;
 
@@ -7,17 +8,37 @@ const PORT = process.env.PORT || 3002;
 const clients = new Map();
 const userSessions = new Map(); // userId -> clientId mapping
 
-// Create WebSocket server
+// Create HTTP server for Railway health checks
+const server = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'healthy',
+      service: 'Oodaa Signaling Server',
+      clients: clients.size,
+      users: userSessions.size,
+      timestamp: new Date().toISOString()
+    }));
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  }
+});
+
+// Create WebSocket server attached to HTTP server
 const wss = new WebSocket.Server({
-  port: PORT,
-  host: '0.0.0.0', // Accept connections from any IP
+  server,
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-console.log(`🚀 Oodaa Signaling Server running on port ${PORT}`);
+// Start the server
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Oodaa Signaling Server running on port ${PORT}`);
+  console.log(`🌐 Health check available at http://localhost:${PORT}/health`);
+});
 
 wss.on('connection', (ws) => {
   const clientId = uuidv4();
