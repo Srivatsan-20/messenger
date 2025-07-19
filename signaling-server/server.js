@@ -37,7 +37,9 @@ const wss = new WebSocket.Server({
 // Start the server
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Oodaa Signaling Server running on port ${PORT}`);
-  console.log(`🌐 Health check available at http://localhost:${PORT}/health`);
+  console.log(`🌐 Health check available at http://0.0.0.0:${PORT}/health`);
+  console.log(`🚀 Server ready for Railway deployment`);
+  console.log(`📡 WebSocket server ready for connections`);
 });
 
 wss.on('connection', (ws) => {
