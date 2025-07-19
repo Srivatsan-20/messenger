@@ -16,6 +16,9 @@ class WebRTCManager extends ChangeNotifier {
   final Map<String, bool> _onlineUsers = {};
   final StreamController<Map<String, dynamic>> _messageController =
       StreamController<Map<String, dynamic>>.broadcast();
+
+  // Message deduplication
+  final Set<String> _processedMessages = <String>{};
   
   // Getters
   bool get isConnected => _isConnected;
@@ -25,6 +28,12 @@ class WebRTCManager extends ChangeNotifier {
   
   // Connect to signaling server
   Future<bool> connect() async {
+    // Prevent multiple connections
+    if (_isConnected && _channel != null) {
+      print('✅ Already connected to signaling server');
+      return true;
+    }
+
     try {
       print('🔄 Attempting to connect to: $signalingServerUrl');
       print('🌐 Connecting to signaling server at $signalingServerUrl...');
@@ -233,16 +242,55 @@ class WebRTCManager extends ChangeNotifier {
 
         case 'message':
           print('📥 Handling incoming message');
+          // Deduplicate messages using message ID
+          final messageId = message['messageData']?['id'];
+          final fromUserId = message['fromUserId'];
+          print('🔍 Message ID: $messageId, From: $fromUserId');
+
+          if (messageId != null && fromUserId != null) {
+            final dedupeKey = 'message_${fromUserId}_$messageId';
+            print('🔑 Deduplication key: $dedupeKey');
+            print('📝 Processed messages: $_processedMessages');
+
+            if (_processedMessages.contains(dedupeKey)) {
+              print('⚠️ Duplicate message detected, skipping: $messageId from $fromUserId');
+              break;
+            }
+            _processedMessages.add(dedupeKey);
+            print('✅ Added to processed messages: $dedupeKey');
+          }
           _handleIncomingMessage(message);
           break;
 
         case 'contact-request':
           print('🤝 Handling contact request');
+          // Deduplicate contact requests
+          final fromUserId = message['fromUserId'];
+          final timestamp = message['requestData']?['timestamp'];
+          if (fromUserId != null && timestamp != null) {
+            final dedupeKey = 'contact_request_${fromUserId}_$timestamp';
+            if (_processedMessages.contains(dedupeKey)) {
+              print('⚠️ Duplicate contact request detected, skipping: $fromUserId');
+              break;
+            }
+            _processedMessages.add(dedupeKey);
+          }
           _handleContactRequest(message);
           break;
 
         case 'contact-accepted':
           print('✅ Handling contact acceptance');
+          // Deduplicate contact acceptance
+          final fromUserId = message['fromUserId'];
+          final timestamp = message['accepterInfo']?['timestamp'];
+          if (fromUserId != null && timestamp != null) {
+            final dedupeKey = 'contact_accepted_${fromUserId}_$timestamp';
+            if (_processedMessages.contains(dedupeKey)) {
+              print('⚠️ Duplicate contact acceptance detected, skipping: $fromUserId');
+              break;
+            }
+            _processedMessages.add(dedupeKey);
+          }
           _handleContactAccepted(message);
           break;
 

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,7 +35,36 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedData();
+    // Clear all old data for fresh start
+    _clearAllStoredData();
+    // Set up message listener only once
+    _webrtcManager.messageStream.listen(_handleIncomingNetworkMessage);
+  }
+
+  // Clear all stored data for fresh start
+  void _clearAllStoredData() {
+    try {
+      // Clear browser localStorage
+      if (kIsWeb) {
+        html.window.localStorage.clear();
+      }
+
+      // Reset app state
+      setState(() {
+        _userIdentity = null;
+        _contacts.clear();
+        _conversations.clear();
+        _isConnectedToServer = false;
+        _isLoading = false;
+      });
+
+      print('🧹 Cleared all stored data for fresh start');
+    } catch (error) {
+      print('Error clearing data: $error');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadSavedData() async {
@@ -120,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!connected) throw Exception('Failed to connect to signaling server');
       final registered = await _webrtcManager.registerUser(userId, {'name': name, 'timestamp': DateTime.now().toIso8601String(),});
       if (!registered) throw Exception('Failed to register user');
-      _webrtcManager.messageStream.listen(_handleIncomingNetworkMessage);
+      // Message listener is already set up in initState - don't add duplicate!
       setState(() {
         _isConnectedToServer = true;
       });
@@ -186,6 +216,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _acceptContactRequest(String userId, Map<String, dynamic> userInfo) async {
+    // Prevent duplicate contact additions
+    final existingIndex = _contacts.indexWhere((contact) => contact['id'] == userId);
+    if (existingIndex != -1) {
+      print('⚠️ Contact $userId already exists, skipping duplicate addition');
+      return;
+    }
+
     setState(() {
       _contacts.add({'name': userInfo['name'] ?? userId, 'id': userId, 'addedAt': DateTime.now().toString(),});
     });
