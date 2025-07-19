@@ -4,10 +4,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter/foundation.dart';
 
 class WebRTCManager extends ChangeNotifier {
-  // Server configuration - update with your computer's IP address
-  static const String _serverHost = '192.168.1.100'; // Update this IP!
-  static const String _serverPort = '3002';
-  static String get signalingServerUrl => 'ws://$_serverHost:$_serverPort';
+  // Railway deployment URL - using WSS for secure connection
+  static const String signalingServerUrl = 'wss://messenger-production-d252.up.railway.app';
 
   WebSocketChannel? _channel;
   String? _clientId;

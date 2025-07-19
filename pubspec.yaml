@@ -33,7 +33,6 @@ dependencies:
   
   # Nearby connections and Bluetooth
   nearby_connections: ^4.3.0
-  flutter_bluetooth_serial: ^0.4.0
   
   # File handling and media
   image_picker: ^1.0.4
@@ -47,6 +46,7 @@ dependencies:
   url_launcher: ^6.2.1
   share_plus: ^7.2.1
   local_auth: ^2.1.7
+  google_fonts: ^6.2.1
   
   # Network and WebSocket
   web_socket_channel: ^2.4.0
