@@ -2,11 +2,10 @@
   "name": "oodaa-messenger-railway",
   "version": "1.0.0",
   "description": "Railway deployment for Oodaa Messenger signaling server",
-  "main": "signaling-server/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "cd signaling-server && npm start",
-    "build": "cd signaling-server && npm install",
-    "dev": "cd signaling-server && npm run dev"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "ws": "^8.14.2",
