@@ -305,22 +305,7 @@ function getOnlineUsersList() {
   return onlineUsers;
 }
 
-// Health check endpoint for monitoring
-const http = require('http');
-const server = http.createServer((req, res) => {
-  if (req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      status: 'healthy',
-      connectedClients: clients.size,
-      onlineUsers: userSessions.size,
-      uptime: process.uptime()
-    }));
-  } else {
-    res.writeHead(404);
-    res.end('Not found');
-  }
-});
+// Additional health check endpoint (already handled by main server above)
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
@@ -331,5 +316,3 @@ process.on('SIGTERM', () => {
     });
   });
 });
-
-console.log('🌐 Health check available at http://localhost:' + PORT + '/health');
